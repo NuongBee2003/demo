@@ -174,14 +174,17 @@
     .student-table tr:hover {
       background-color: #f1f1f1;
     }
+
     .media-preview {
       margin-top: 20px;
       padding: 10px;
       border: 1px solid #ddd;
       border-radius: 4px;
       background-color: #fff;
-      display: none; /* Ẩn mặc định */
+      display: none;
+      /* Ẩn mặc định */
     }
+
     .media-preview img {
       max-width: 100%;
       margin: 5px 0;
@@ -316,7 +319,7 @@
     })
 
     document.getElementById('selectPhotosButton').addEventListener('click', function () {
-      eventBridge.sendToNative('ACTIONS.SELECT_MULTIPLE_PHOTOS', true);
+      eventBridge.sendToNative(ACTIONS.SELECT_MULTIPLE_PHOTOS, true);
     });
 
     document.getElementById('selectAudioButton').addEventListener('click', function () {
@@ -325,7 +328,8 @@
 
     // Nhận dữ liệu media từ native
     eventBridge.receiveDataFromNative(ACTIONS.MEDIA_CAPTURED, function (mediaData) {
-      if (mediaData.uris) { // Trường hợp chọn nhiều ảnh
+      console.log('Media received from native:', mediaData);
+      if (mediaData.uris) { // Multiple photos case
         const previewContent = document.getElementById('previewContent');
         previewContent.innerHTML = '';
         document.getElementById('previewTitle').textContent = 'Selected Photos';
@@ -345,12 +349,22 @@
     });
 
     // Function hiển thị media (đã có, chỉnh sửa nhẹ để hỗ trợ khu vực preview)
+    // Enhanced media preview function
     function showMediaPreview(mediaData) {
       const previewArea = document.getElementById('mediaPreview');
       const previewContent = document.getElementById('previewContent');
       const previewTitle = document.getElementById('previewTitle');
 
+      console.log('Showing media preview for:', mediaData);
       previewContent.innerHTML = '';
+
+      // Handle null or undefined mediaData
+      if (!mediaData) {
+        previewTitle.textContent = 'Error';
+        previewContent.innerHTML = '<p>No media data received</p>';
+        previewArea.style.display = 'block';
+        return;
+      }
 
       switch (mediaData.fileType) {
         case 'image':
@@ -362,8 +376,16 @@
           img.alt = 'Captured photo';
           img.style.maxWidth = '100%';
           img.style.borderRadius = '4px';
+
+          // Add error handling for image loading
+          img.onerror = function () {
+            console.error('Failed to load image:', mediaData.uri);
+            previewContent.innerHTML = '<p>Error loading image</p>';
+          };
+
           previewContent.appendChild(img);
           break;
+
         case 'audio':
         case 'audio/mp3':
         case 'audio/wav':
@@ -374,79 +396,21 @@
           audio.style.width = '100%';
           previewContent.appendChild(audio);
           break;
-        default:
-          previewTitle.textContent = 'File';
-          const fileInfo = document.createElement('div');
-          fileInfo.innerHTML = `
-            <p><strong>File name:</strong> ${mediaData.name || 'Unknown'}</p>
-            <p><strong>File type:</strong> ${mediaData.fileType}</p>
-            <p><strong>File size:</strong> ${Math.round(mediaData.size / 1024) || 'N/A'} KB</p>
-          `;
-          previewContent.appendChild(fileInfo);
-      }
-
-      previewArea.style.display = 'block';
-    }
-    
-
-    // Function to display the captured/selected media
-    function showMediaPreview(mediaData) {
-      const previewArea = document.getElementById('mediaPreview');
-      const previewContent = document.getElementById('previewContent');
-      const previewTitle = document.getElementById('previewTitle');
-
-      // Clear existing preview content
-      previewContent.innerHTML = '';
-
-      // Handle different media types
-      switch (mediaData.fileType) {
-        case 'image/jpeg':
-        case 'image/png':
-          previewTitle.textContent = 'Photo';
-          const img = document.createElement('img');
-          img.src = mediaData.uri;
-          img.alt = 'Captured photo';
-          img.style.maxWidth = '100%';
-          img.style.borderRadius = '4px';
-          previewContent.appendChild(img);
-          break;
-
-        case 'video/mp4':
-        case 'video/quicktime':
-          previewTitle.textContent = 'Video';
-          const video = document.createElement('video');
-          video.src = mediaData.uri;
-          video.controls = true;
-          video.style.maxWidth = '100%';
-          video.style.borderRadius = '4px';
-          previewContent.appendChild(video);
-          break;
-
-        case 'audio/mp3':
-        case 'audio/wav':
-          previewTitle.textContent = 'Audio';
-          const audio = document.createElement('audio');
-          audio.src = mediaData.uri;
-          audio.controls = true;
-          audio.style.width = '100%';
-          previewContent.appendChild(audio);
-          break;
 
         default:
-          previewTitle.textContent = 'File';
+          previewTitle.textContent = mediaData.fileType || 'File';
           const fileInfo = document.createElement('div');
           fileInfo.innerHTML = `
-        <p><strong>File name:</strong> ${mediaData.name}</p>
-        <p><strong>File type:</strong> ${mediaData.fileType}</p>
-        <p><strong>File size:</strong> ${Math.round(mediaData.size / 1024)} KB</p>
+        <p><strong>File name:</strong> ${mediaData.name || 'Unknown'}</p>
+        <p><strong>File type:</strong> ${mediaData.fileType || 'Unknown'}</p>
+        <p><strong>File size:</strong> ${mediaData.size ? Math.round(mediaData.size / 1024) : 'N/A'} KB</p>
+        <p><strong>URI:</strong> ${mediaData.uri ? mediaData.uri.substring(0, 30) + '...' : 'Not provided'}</p>
       `;
           previewContent.appendChild(fileInfo);
       }
 
-      // Show the preview area
       previewArea.style.display = 'block';
     }
-
 
     // Function to show student list in popup - creates table rows dynamically
     function showStudentListPopup(students) {
