@@ -329,94 +329,225 @@
     // Nhận dữ liệu media từ native
     eventBridge.receiveDataFromNative(ACTIONS.MEDIA_CAPTURED, function (mediaData) {
       console.log('Media received from native:', mediaData);
-      if (mediaData.uris) { // Multiple photos case
-        const previewContent = document.getElementById('previewContent');
-        previewContent.innerHTML = '';
-        document.getElementById('previewTitle').textContent = 'Selected Photos';
-        mediaData.uris.forEach(uri => {
-          const img = document.createElement('img');
-          img.src = uri;
-          img.alt = 'Selected photo';
-          img.style.maxWidth = '100%';
-          img.style.borderRadius = '4px';
-          img.style.margin = '5px 0';
-          previewContent.appendChild(img);
-        });
-        document.getElementById('mediaPreview').style.display = 'block';
+      if (mediaData.uris && Array.isArray(mediaData.uris)) { // Multiple photos case
+        showMultiplePhotosPreview(mediaData.uris);
       } else { // Trường hợp chụp ảnh hoặc chọn audio
         showMediaPreview(mediaData);
       }
     });
-
-    // Function hiển thị media (đã có, chỉnh sửa nhẹ để hỗ trợ khu vực preview)
-    // Enhanced media preview function
-    function showMediaPreview(mediaData) {
+    function showMultiplePhotosPreview(uris) {
       const previewArea = document.getElementById('mediaPreview');
       const previewContent = document.getElementById('previewContent');
       const previewTitle = document.getElementById('previewTitle');
 
-      console.log('Showing media preview for:', mediaData);
+      // Clear previous content and set title
       previewContent.innerHTML = '';
+      previewTitle.textContent = 'Selected Photos';
 
-      // Handle null or undefined mediaData
-      if (!mediaData) {
-        previewTitle.textContent = 'Error';
-        previewContent.innerHTML = '<p>No media data received</p>';
-        previewArea.style.display = 'block';
-        return;
-      }
+      // Add a counter for loaded images
+      const statusDiv = document.createElement('div');
+      statusDiv.textContent = `Loading 0/${uris.length} images...`;
+      statusDiv.style.marginBottom = '10px';
+      previewContent.appendChild(statusDiv);
 
-      switch (mediaData.fileType) {
-        case 'image':
-        case 'image/jpeg':
-        case 'image/png':
-          previewTitle.textContent = 'Photo';
-          const img = document.createElement('img');
-          img.src = mediaData.uri;
-          img.alt = 'Captured photo';
-          img.style.maxWidth = '100%';
-          img.style.borderRadius = '4px';
+      // Create image gallery container
+      const galleryDiv = document.createElement('div');
+      galleryDiv.style.display = 'flex';
+      galleryDiv.style.flexWrap = 'wrap';
+      galleryDiv.style.gap = '10px';
+      galleryDiv.style.justifyContent = 'center';
+      previewContent.appendChild(galleryDiv);
 
-          img.onerror = function () {
-            console.error('Failed to load image:', mediaData.uri);
-            previewContent.innerHTML = '<p>Error loading image</p>';
-          };
+      // Track loading progress
+      let loadedCount = 0;
 
-          // Append file info below the image
-          const imgInfo = document.createElement('div');
-          imgInfo.innerHTML = `
-        <p><strong>File name:</strong> ${mediaData.name || 'Unknown'}</p>
-        <p><strong>File size:</strong> ${mediaData.size ? Math.round(mediaData.size / 1024) : 'N/A'} KB</p>
-      `;
-          previewContent.appendChild(img);
-          previewContent.appendChild(imgInfo);
-          break;
+      // Load each image
+      uris.forEach((uri, index) => {
+        const imgContainer = document.createElement('div');
+        imgContainer.style.width = '45%';
+        imgContainer.style.position = 'relative';
+        imgContainer.style.margin = '5px';
 
-        case 'audio':
-        case 'audio/mp3':
-        case 'audio/wav':
-          previewTitle.textContent = 'Audio';
-          const audio = document.createElement('audio');
-          audio.src = mediaData.uri;
-          audio.controls = true;
-          audio.style.width = '100%';
-          previewContent.appendChild(audio);
-          break;
+        // Create loading placeholder
+        const placeholder = document.createElement('div');
+        placeholder.textContent = `Loading image ${index + 1}...`;
+        placeholder.style.height = '100px';
+        placeholder.style.display = 'flex';
+        placeholder.style.justifyContent = 'center';
+        placeholder.style.alignItems = 'center';
+        placeholder.style.border = '1px dashed #ccc';
+        imgContainer.appendChild(placeholder);
 
-        default:
-          previewTitle.textContent = mediaData.fileType || 'File';
-          const fileInfo = document.createElement('div');
-          fileInfo.innerHTML = `
-        <p><strong>File name:</strong> ${mediaData.name || 'Unknown'}</p>
-        <p><strong>File type:</strong> ${mediaData.fileType || 'Unknown'}</p>
-        <p><strong>File size:</strong> ${mediaData.size ? Math.round(mediaData.size / 1024) : 'N/A'} KB</p>
-        <p><strong>URI:</strong> ${mediaData.uri ? mediaData.uri.substring(0, 30) + '...' : 'Not provided'}</p>
-      `;
-          previewContent.appendChild(fileInfo);
-      }
+        // Create image element
+        const img = document.createElement('img');
+        img.style.width = '100%';
+        img.style.borderRadius = '4px';
+        img.style.display = 'none'; // Hide until loaded
 
+        // Handle successful load
+        img.onload = function () {
+          loadedCount++;
+          statusDiv.textContent = `Loaded ${loadedCount}/${uris.length} images`;
+          placeholder.remove();
+          img.style.display = 'block';
+        };
+
+        // Handle load error
+        img.onerror = function () {
+          loadedCount++;
+          statusDiv.textContent = `Loaded ${loadedCount}/${uris.length} images (some with errors)`;
+          placeholder.textContent = 'Error loading image';
+          placeholder.style.color = 'red';
+        };
+
+        // Start loading the image
+        img.src = uri;
+        img.alt = `Selected photo ${index + 1}`;
+        imgContainer.appendChild(img);
+
+        // Add to gallery
+        galleryDiv.appendChild(imgContainer);
+      });
+
+      // Add a close button
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'Close Gallery';
+      closeButton.style.display = 'block';
+      closeButton.style.margin = '15px auto 0';
+      closeButton.style.padding = '8px 16px';
+      closeButton.style.backgroundColor = '#f44336';
+      closeButton.style.color = 'white';
+      closeButton.style.border = 'none';
+      closeButton.style.borderRadius = '4px';
+      closeButton.onclick = function () {
+        previewArea.style.display = 'none';
+      };
+      previewContent.appendChild(closeButton);
+
+      // Show the preview area
       previewArea.style.display = 'block';
     }
+
+    function showMediaPreview(mediaData) {
+  const previewArea = document.getElementById('mediaPreview');
+  const previewContent = document.getElementById('previewContent');
+  const previewTitle = document.getElementById('previewTitle');
+
+  // Clear previous content
+  previewContent.innerHTML = '';
+
+  if (!mediaData) {
+    previewTitle.textContent = 'Error';
+    previewContent.innerHTML = '<p>No media data received</p>';
+    previewArea.style.display = 'block';
+    return;
+  }
+
+  switch (mediaData.fileType) {
+    case 'image':
+    case 'image/jpeg':
+    case 'image/png':
+      previewTitle.textContent = 'Photo';
+      const img = document.createElement('img');
+      img.src = mediaData.uri;
+      img.alt = 'Captured photo';
+      img.style.maxWidth = '100%';
+      img.style.borderRadius = '4px';
+
+      img.onerror = function () {
+        console.error('Failed to load image:', mediaData.uri);
+        previewContent.innerHTML = '<p>Error loading image</p>';
+      };
+
+      const imgInfo = document.createElement('div');
+      imgInfo.innerHTML = `
+        <p><strong>File name:</strong> ${mediaData.name || 'Unknown'}</p>
+        <p><strong>File size:</strong> ${mediaData.size ? Math.round(mediaData.size / 1024) : 'N/A'} KB</p>
+      `;
+      previewContent.appendChild(img);
+      previewContent.appendChild(imgInfo);
+      break;
+      
+    case 'audio':
+    case 'audio/mpeg':
+    case 'audio/mp3':
+    case 'audio/wav':
+    case 'audio/m4a':
+      previewTitle.textContent = 'Audio';
+      
+      // Create audio player
+      const audio = document.createElement('audio');
+      audio.controls = true;
+      audio.style.width = '100%';
+      audio.style.margin = '10px 0';
+      
+      // Add source with error handling
+      audio.src = mediaData.uri;
+      audio.onerror = function() {
+        console.error('Failed to load audio:', mediaData.uri);
+        previewContent.innerHTML = '<p style="color: red;">Error loading audio file</p>';
+      };
+      
+      // Add file info
+      const audioInfo = document.createElement('div');
+      audioInfo.innerHTML = `
+        <p><strong>File name:</strong> ${mediaData.name || 'Unknown'}</p>
+        <p><strong>File type:</strong> ${mediaData.fileType || 'Unknown'}</p>
+        <p><strong>Duration:</strong> ${mediaData.duration ? formatDuration(mediaData.duration) : 'Unknown'}</p>
+      `;
+      
+      // Create waveform visualization placeholder (if needed)
+      const waveformPlaceholder = document.createElement('div');
+      waveformPlaceholder.style.height = '50px';
+      waveformPlaceholder.style.backgroundColor = '#f0f0f0';
+      waveformPlaceholder.style.borderRadius = '4px';
+      waveformPlaceholder.style.marginTop = '10px';
+      waveformPlaceholder.textContent = 'Audio Waveform Visualization';
+      waveformPlaceholder.style.display = 'flex';
+      waveformPlaceholder.style.alignItems = 'center';
+      waveformPlaceholder.style.justifyContent = 'center';
+      
+      previewContent.appendChild(audio);
+      previewContent.appendChild(audioInfo);
+      previewContent.appendChild(waveformPlaceholder);
+      break;
+      
+    default:
+      previewTitle.textContent = mediaData.fileType || 'Media';
+      previewContent.innerHTML = `
+        <div style="padding: 15px; background-color: #f9f9f9; border-radius: 4px;">
+          <p><strong>File type:</strong> ${mediaData.fileType || 'Unknown'}</p>
+          <p><strong>File name:</strong> ${mediaData.name || 'Unknown'}</p>
+          <p><strong>URI:</strong> ${mediaData.uri ? mediaData.uri.substring(0, 30) + '...' : 'Not provided'}</p>
+        </div>
+      `;
+  }
+
+  // Add close button
+  const closeButton = document.createElement('button');
+  closeButton.textContent = 'Close Preview';
+  closeButton.style.display = 'block';
+  closeButton.style.margin = '15px auto 0';
+  closeButton.style.padding = '8px 16px';
+  closeButton.style.backgroundColor = '#f44336';
+  closeButton.style.color = 'white';
+  closeButton.style.border = 'none';
+  closeButton.style.borderRadius = '4px';
+  closeButton.onclick = function() {
+    previewArea.style.display = 'none';
+  };
+  previewContent.appendChild(closeButton);
+  
+  // Show the preview area
+  previewArea.style.display = 'block';
+}
+
+// Helper function for formatting audio duration
+function formatDuration(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
 
     // Function to show student list in popup - creates table rows dynamically
     function showStudentListPopup(students) {
