@@ -338,66 +338,65 @@
     eventBridge.receiveDataFromNative(ACTIONS.SELECT_VIDEO, function (videoData) {
       console.log('Video received from native:', videoData);
       showVideoPreview(videoData);
-
-      function showVideoPreview(videoData) {
-        const previewArea = document.getElementById('mediaPreview');
-        const previewContent = document.getElementById('previewContent');
-        const previewTitle = document.getElementById('previewTitle');
-
-        // Clear previous content
-        previewContent.innerHTML = '';
-        previewTitle.textContent = 'Video';
-
-        if (!videoData || !videoData.uri) {
-          previewContent.innerHTML = '<p>Error: Invalid video data received</p>';
-          previewArea.style.display = 'block';
-          return;
-        }
-
-        // Create video player
-        const video = document.createElement('video');
-        video.controls = true;
-        video.style.width = '100%';
-        video.style.maxHeight = '300px';
-        video.style.borderRadius = '4px';
-        video.src = videoData.uri;
-
-        video.onerror = function () {
-          previewContent.innerHTML = '<p style="color: red;">Error loading video file</p>';
-        };
-
-        // Add video information
-        const videoInfo = document.createElement('div');
-        videoInfo.style.marginTop = '10px';
-        videoInfo.innerHTML = `
-          <p><strong>File:</strong> ${videoData.name || 'Unknown'}</p>
-          <p><strong>Size:</strong> ${videoData.size ? Math.round(videoData.size / 1024) + ' KB' : 'Unknown'}</p>
-          <p><strong>Duration:</strong> ${videoData.duration ? formatDuration(videoData.duration) : 'Unknown'}</p>
-          <p><strong>Dimensions:</strong> ${videoData.width || 0} × ${videoData.height || 0}</p>
-        `;
-
-        previewContent.appendChild(video);
-        previewContent.appendChild(videoInfo);
-
-        // Add close button
-        const closeButton = document.createElement('button');
-        closeButton.textContent = 'Close Video';
-        closeButton.style.display = 'block';
-        closeButton.style.margin = '15px auto 0';
-        closeButton.style.padding = '8px 16px';
-        closeButton.style.backgroundColor = '#f44336';
-        closeButton.style.color = 'white';
-        closeButton.style.border = 'none';
-        closeButton.style.borderRadius = '4px';
-        closeButton.onclick = function () {
-          previewArea.style.display = 'none';
-          video.pause();
-        };
-
-        previewContent.appendChild(closeButton);
-        previewArea.style.display = 'block';
-      }
     });
+    function showVideoPreview(videoData) {
+      const previewArea = document.getElementById('mediaPreview');
+      const previewContent = document.getElementById('previewContent');
+      const previewTitle = document.getElementById('previewTitle');
+
+      // Clear previous content
+      previewContent.innerHTML = '';
+      previewTitle.textContent = 'Video';
+
+      if (!videoData || !videoData.uri) {
+        previewContent.innerHTML = '<p>Error: Invalid video data received</p>';
+        previewArea.style.display = 'block';
+        return;
+      }
+
+      // Create video player
+      const video = document.createElement('video');
+      video.controls = true;
+      video.style.width = '100%';
+      video.style.maxHeight = '300px';
+      video.style.borderRadius = '4px';
+      video.src = videoData.uri;
+
+      video.onerror = function () {
+        previewContent.innerHTML = '<p style="color: red;">Error loading video file</p>';
+      };
+
+      // Add video information
+      const videoInfo = document.createElement('div');
+      videoInfo.style.marginTop = '10px';
+      videoInfo.innerHTML = `
+    <p><strong>File:</strong> ${videoData.name || 'Unknown'}</p>
+    <p><strong>Size:</strong> ${videoData.size ? Math.round(videoData.size / 1024) + ' KB' : 'Unknown'}</p>
+    <p><strong>Duration:</strong> ${videoData.duration ? formatDuration(videoData.duration) : 'Unknown'}</p>
+    <p><strong>Dimensions:</strong> ${videoData.width || 0} × ${videoData.height || 0}</p>
+  `;
+
+      previewContent.appendChild(video);
+      previewContent.appendChild(videoInfo);
+
+      // Add close button
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'Close Video';
+      closeButton.style.display = 'block';
+      closeButton.style.margin = '15px auto 0';
+      closeButton.style.padding = '8px 16px';
+      closeButton.style.backgroundColor = '#f44336';
+      closeButton.style.color = 'white';
+      closeButton.style.border = 'none';
+      closeButton.style.borderRadius = '4px';
+      closeButton.onclick = function () {
+        previewArea.style.display = 'none';
+        video.pause();
+      };
+
+      previewContent.appendChild(closeButton);
+      previewArea.style.display = 'block';
+    }
     function showMultiplePhotosPreview(uris) {
       const previewArea = document.getElementById('mediaPreview');
       const previewContent = document.getElementById('previewContent');
