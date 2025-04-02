@@ -228,6 +228,7 @@
     <div class="button-group" style="margin-top: 10px;">
       <button type="button" class="submit-btn" id="capturePhotoButton">Capture Photo</button>
       <button type="button" class="reset-btn" id="selectPhotosButton">Select Photos</button>
+      <button type="button" class="popup-btn" id="selectVideo">Select Video</button>
     </div>
     <div class="media-preview" id="mediaPreview">
       <h3 id="previewTitle"></h3>
@@ -307,6 +308,7 @@
       // Send event to native to request student list
       eventBridge.sendToNative(ACTIONS.OPEN_POPUP, true);
     });
+    
     eventBridge.receiveDataFromNative(ACTIONS.GET_STUDENT_LIST, function (studentData) {
       // Now studentData contains the actual student list 
       // (either from data.value or data.data based on the implementation)
@@ -320,6 +322,16 @@
     document.getElementById('selectPhotosButton').addEventListener('click', function () {
       eventBridge.sendToNative(ACTIONS.SELECT_MULTIPLE_PHOTOS, true);
     });
+    document.getElementById('selectVideo').addEventListener('click', function () {
+      eventBridge.sendToNative(ACTIONS.SELECT_VIDEO, true);
+    });
+
+    eventBridge.receiveDataFromNative('mediaCaptured', function (videoData){
+      if(videoData.uris){
+        showVideoPreview(videoData.uris);
+      }
+    })
+
     // Nhận dữ liệu media từ native
     eventBridge.receiveDataFromNative(ACTIONS.MEDIA_CAPTURED, function (mediaData) {
       console.log('Media received from native:', mediaData);
@@ -329,6 +341,54 @@
         showMediaPreview(mediaData);
       }
     });
+
+    function showVideoPreview(uris){
+      const previewArea = document.getElementById('mediaPreview');
+      const previewContent = document.getElementById('previewContent');
+      const previewTitle = document.getElementById('previewTitle');
+
+      // Xóa nội dung cũ và đặt tiêu đề
+      previewContent.innerHTML = '';
+      previewTitle.textContent = 'Selected Video';
+
+      // Kiểm tra mảng rỗng
+      if (uris.length === 0) {
+        const noPhotosMessage = document.createElement('p');
+        noPhotosMessage.textContent = 'Không có video nào được chọn.';
+        previewContent.appendChild(noPhotosMessage);
+        previewArea.style.display = 'block';
+        return;
+      }
+
+      // Tạo phần tử video
+      const video = document.createElement('video');
+      video.src = uris[0]; // Chỉ hiển thị video đầu tiên trong danh sách
+      video.controls = true;
+      video.style.width = '100%';
+      video.style.borderRadius = '4px';
+      previewContent.appendChild(video);
+
+      // Thêm nút đóng
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'Đóng Video';
+      closeButton.style.display = 'block';
+      closeButton.style.margin = '15px auto 0';
+      closeButton.style.padding = '8px 16px';
+      closeButton.style.backgroundColor = '#f44336';
+      closeButton.style.color = 'white';
+      closeButton.style.border = 'none';
+      closeButton.style.borderRadius = '4px';
+      closeButton.onclick = function () {
+        previewArea.style.display = 'none';
+        video.pause(); // Dừng video khi đóng
+        video.src = ''; // Giải phóng tài nguyên
+      };
+      previewContent.appendChild(closeButton);
+
+      // Hiển thị khu vực xem trước
+      previewArea.style.display = 'block';
+    }
+
     function showMultiplePhotosPreview(uris) {
       const previewArea = document.getElementById('mediaPreview');
       const previewContent = document.getElementById('previewContent');
