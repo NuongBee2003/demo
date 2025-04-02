@@ -12,6 +12,8 @@ const ACTIONS = {
     CAPTURE_AUDIO: 'captureAudio',
     SELECT_VIDEO: 'mediaCaptured',
     SELECT_AUDIO: 'selectAudio',
+    OPEN_VIDEO: 'openVideo',
+    GET_VIDEO: 'getVideo',
 
     SELECT_MULTIPLE_PHOTOS: 'selectMultiplePhotos',
     OPEN_POPUP: 'openPopup',
