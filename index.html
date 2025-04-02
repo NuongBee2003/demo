@@ -294,10 +294,7 @@
     document.getElementById('resetButton').addEventListener('click', function () {
       // Form reset happens automatically due to type="reset"
       // Just notify React Native that form was reset
-      window.ReactNativeWebView.postMessage(JSON.stringify({
-        type: 'formReset',
-        value: true
-      }));
+      eventBridge.sendToNative(ACTIONS.FORM_RESET, true);
     });
 
     // Open Popup Button - shows popup and requests data from React Native
@@ -306,7 +303,7 @@
       document.getElementById('studentPopup').classList.add('popup-visible');
 
       // Send event to native to request student list
-      eventBridge.sendToNative('openPopup', true);
+      eventBridge.sendToNative(ACTIONS.OPEN_POPUP, true);
     });
     eventBridge.receiveDataFromNative(ACTIONS.GET_STUDENT_LIST, function (studentData) {
       // Now studentData contains the actual student list 
@@ -319,7 +316,7 @@
     })
 
     document.getElementById('selectPhotosButton').addEventListener('click', function () {
-      eventBridge.sendToNative('SELECT_MULTIPLE_PHOTOS', true);
+      eventBridge.sendToNative('ACTIONS.SELECT_MULTIPLE_PHOTOS', true);
     });
 
     document.getElementById('selectAudioButton').addEventListener('click', function () {
