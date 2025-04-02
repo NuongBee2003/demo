@@ -336,97 +336,119 @@
       }
     });
     function showMultiplePhotosPreview(uris) {
-      const previewArea = document.getElementById('mediaPreview');
-      const previewContent = document.getElementById('previewContent');
-      const previewTitle = document.getElementById('previewTitle');
+  const previewArea = document.getElementById('mediaPreview');
+  const previewContent = document.getElementById('previewContent');
+  const previewTitle = document.getElementById('previewTitle');
 
-      // Clear previous content and set title
-      previewContent.innerHTML = '';
-      previewTitle.textContent = 'Selected Photos';
+  // Xóa nội dung cũ và đặt tiêu đề
+  previewContent.innerHTML = '';
+  previewTitle.textContent = 'Selected Photos';
 
-      // Add a counter for loaded images
-      const statusDiv = document.createElement('div');
-      statusDiv.textContent = `Loading 0/${uris.length} images...`;
-      statusDiv.style.marginBottom = '10px';
-      previewContent.appendChild(statusDiv);
+  // Kiểm tra mảng rỗng
+  if (uris.length === 0) {
+    const noPhotosMessage = document.createElement('p');
+    noPhotosMessage.textContent = 'Không có ảnh nào được chọn.';
+    previewContent.appendChild(noPhotosMessage);
+    previewArea.style.display = 'block';
+    return;
+  }
 
-      // Create image gallery container
-      const galleryDiv = document.createElement('div');
-      galleryDiv.style.display = 'flex';
-      galleryDiv.style.flexWrap = 'wrap';
-      galleryDiv.style.gap = '10px';
-      galleryDiv.style.justifyContent = 'center';
-      previewContent.appendChild(galleryDiv);
+  // Thêm bộ đếm trạng thái tải ảnh
+  const statusDiv = document.createElement('div');
+  statusDiv.textContent = `Đang tải 0/${uris.length} ảnh...`;
+  statusDiv.style.marginBottom = '10px';
+  previewContent.appendChild(statusDiv);
 
-      // Track loading progress
-      let loadedCount = 0;
+  // Tạo container cho gallery ảnh
+  const galleryDiv = document.createElement('div');
+  galleryDiv.style.display = 'flex';
+  galleryDiv.style.flexWrap = 'wrap';
+  galleryDiv.style.gap = '10px';
+  galleryDiv.style.justifyContent = 'center';
+  previewContent.appendChild(galleryDiv);
 
-      // Load each image
-      uris.forEach((uri, index) => {
-        const imgContainer = document.createElement('div');
-        imgContainer.style.width = '45%';
-        imgContainer.style.position = 'relative';
-        imgContainer.style.margin = '5px';
+  // Theo dõi tiến trình tải ảnh
+  let loadedCount = 0;
 
-        // Create loading placeholder
-        const placeholder = document.createElement('div');
-        placeholder.textContent = `Loading image ${index + 1}...`;
-        placeholder.style.height = '100px';
-        placeholder.style.display = 'flex';
-        placeholder.style.justifyContent = 'center';
-        placeholder.style.alignItems = 'center';
-        placeholder.style.border = '1px dashed #ccc';
-        imgContainer.appendChild(placeholder);
+  // Sử dụng Intersection Observer để lazy load ảnh
+  const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const imgContainer = entry.target;
+        const img = imgContainer.querySelector('img');
+        img.src = img.dataset.src; // Gán src khi ảnh vào tầm nhìn
+        observer.unobserve(imgContainer);
+      }
+    });
+  }, { rootMargin: '50px' });
 
-        // Create image element
-        const img = document.createElement('img');
-        img.style.width = '100%';
-        img.style.borderRadius = '4px';
-        img.style.display = 'none'; // Hide until loaded
+  // Tải từng ảnh
+  uris.forEach((uri, index) => {
+    const imgContainer = document.createElement('div');
+    imgContainer.style.width = '45%';
+    imgContainer.style.position = 'relative';
+    imgContainer.style.margin = '5px';
 
-        // Handle successful load
-        img.onload = function () {
-          loadedCount++;
-          statusDiv.textContent = `Loaded ${loadedCount}/${uris.length} images`;
-          placeholder.remove();
-          img.style.display = 'block';
-        };
+    // Tạo placeholder trong khi tải
+    const placeholder = document.createElement('div');
+    placeholder.textContent = `Đang tải ảnh ${index + 1}...`;
+    placeholder.style.height = '100px';
+    placeholder.style.display = 'flex';
+    placeholder.style.justifyContent = 'center';
+    placeholder.style.alignItems = 'center';
+    placeholder.style.border = '1px dashed #ccc';
+    imgContainer.appendChild(placeholder);
 
-        // Handle load error
-        img.onerror = function () {
-          loadedCount++;
-          statusDiv.textContent = `Loaded ${loadedCount}/${uris.length} images (some with errors)`;
-          placeholder.textContent = 'Error loading image';
-          placeholder.style.color = 'red';
-        };
+    // Tạo phần tử ảnh
+    const img = document.createElement('img');
+    img.style.width = '100%';
+    img.style.borderRadius = '4px';
+    img.style.display = 'none'; // Ẩn ảnh cho đến khi tải xong
+    img.dataset.src = uri; // Lưu URI trong data attribute
+    img.alt = `Ảnh được chọn ${index + 1}`;
 
-        // Start loading the image
-        img.src = uri;
-        img.alt = `Selected photo ${index + 1}`;
-        imgContainer.appendChild(img);
+    // Xử lý khi ảnh tải thành công
+    img.onload = function () {
+      loadedCount++;
+      statusDiv.textContent = `Đã tải ${loadedCount}/${uris.length} ảnh`;
+      placeholder.remove();
+      img.style.display = 'block';
+    };
 
-        // Add to gallery
-        galleryDiv.appendChild(imgContainer);
-      });
+    // Xử lý khi tải ảnh thất bại
+    img.onerror = function () {
+      loadedCount++;
+      console.error(`Không tải được ảnh ${index + 1}: ${uri}`);
+      statusDiv.textContent = `Đã tải ${loadedCount}/${uris.length} ảnh (có lỗi xảy ra)`;
+      placeholder.textContent = 'Không tải được (kiểm tra kết nối hoặc file)';
+      placeholder.style.color = 'red';
+    };
 
-      // Add a close button
-      const closeButton = document.createElement('button');
-      closeButton.textContent = 'Close Gallery';
-      closeButton.style.display = 'block';
-      closeButton.style.margin = '15px auto 0';
-      closeButton.style.padding = '8px 16px';
-      closeButton.style.backgroundColor = '#f44336';
-      closeButton.style.color = 'white';
-      closeButton.style.border = 'none';
-      closeButton.style.borderRadius = '4px';
-      closeButton.onclick = function () {
-        previewArea.style.display = 'none';
-      };
-      previewContent.appendChild(closeButton);
+    imgContainer.appendChild(img);
+    galleryDiv.appendChild(imgContainer);
 
-      // Show the preview area
-      previewArea.style.display = 'block';
-    }
+    // Quan sát container để lazy load
+    observer.observe(imgContainer);
+  });
+
+  // Thêm nút đóng
+  const closeButton = document.createElement('button');
+  closeButton.textContent = 'Đóng Gallery';
+  closeButton.style.display = 'block';
+  closeButton.style.margin = '15px auto 0';
+  closeButton.style.padding = '8px 16px';
+  closeButton.style.backgroundColor = '#f44336';
+  closeButton.style.color = 'white';
+  closeButton.style.border = 'none';
+  closeButton.style.borderRadius = '4px';
+  closeButton.onclick = function () {
+    previewArea.style.display = 'none';
+  };
+  previewContent.appendChild(closeButton);
+
+  // Hiển thị khu vực xem trước
+  previewArea.style.display = 'block';
+}
 
     function showMediaPreview(mediaData) {
   const previewArea = document.getElementById('mediaPreview');
