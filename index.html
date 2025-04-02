@@ -323,17 +323,17 @@
       eventBridge.sendToNative(ACTIONS.SELECT_MULTIPLE_PHOTOS, true);
     });
     document.getElementById('selectVideo').addEventListener('click', function () {
-      eventBridge.sendToNative(ACTIONS.SELECT_VIDEO, true);
+      eventBridge.sendToNative('captureVideo', true);
     });
 
-    eventBridge.receiveDataFromNative('mediaCaptured', function (videoData){
+    eventBridge.receiveDataFromNative('videoSend', function (videoData){
       if(videoData.uris){
         showVideoPreview(videoData.uris);
       }
     })
 
     // Nhận dữ liệu media từ native
-    eventBridge.receiveDataFromNative(ACTIONS.MEDIA_CAPTURED, function (mediaData) {
+    eventBridge.receiveDataFromNative("ACTIONS.MEDIA_CAPTURED", function (mediaData) {
       console.log('Media received from native:', mediaData);
       if (mediaData.uris && Array.isArray(mediaData.uris)) { // Multiple photos case
         showMultiplePhotosPreview(mediaData.uris);
