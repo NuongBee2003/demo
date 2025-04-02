@@ -337,7 +337,7 @@
     });
     eventBridge.receiveDataFromNative(ACTIONS.SELECT_VIDEO, function (videoData) {
       console.log('Video received from native:', videoData);
-      showVideoPreview(videoData);
+      //showVideoPreview(videoData);
     });
     function showVideoPreview(videoData) {
       const previewArea = document.getElementById('mediaPreview');
@@ -554,52 +554,6 @@
           previewContent.appendChild(img);
           previewContent.appendChild(imgInfo);
           break;
-
-          case 'video':
-    case 'video/mp4':
-    case 'video/quicktime':
-    case 'video/x-msvideo':
-      previewTitle.textContent = 'Video';
-
-      // Create video player
-      const video = document.createElement('video');
-      video.controls = true;
-      video.style.width = '100%';
-      video.style.maxHeight = '300px';
-      video.style.borderRadius = '4px';
-      video.style.margin = '10px 0';
-
-      // Add source with error handling
-      video.src = mediaData.uri;
-      video.onerror = function () {
-        console.error('Failed to load video:', mediaData.uri);
-        previewContent.innerHTML = '<p style="color: red;">Error loading video file</p>';
-      };
-
-          // Add file info
-          const audioInfo = document.createElement('div');
-          audioInfo.innerHTML = `
-        <p><strong>File name:</strong> ${mediaData.name || 'Unknown'}</p>
-        <p><strong>File type:</strong> ${mediaData.fileType || 'Unknown'}</p>
-        <p><strong>Duration:</strong> ${mediaData.duration ? formatDuration(mediaData.duration) : 'Unknown'}</p>
-      `;
-
-          // Create waveform visualization placeholder (if needed)
-          const waveformPlaceholder = document.createElement('div');
-          waveformPlaceholder.style.height = '50px';
-          waveformPlaceholder.style.backgroundColor = '#f0f0f0';
-          waveformPlaceholder.style.borderRadius = '4px';
-          waveformPlaceholder.style.marginTop = '10px';
-          waveformPlaceholder.textContent = 'Audio Waveform Visualization';
-          waveformPlaceholder.style.display = 'flex';
-          waveformPlaceholder.style.alignItems = 'center';
-          waveformPlaceholder.style.justifyContent = 'center';
-
-          previewContent.appendChild(audio);
-          previewContent.appendChild(audioInfo);
-          previewContent.appendChild(waveformPlaceholder);
-          break;
-
         default:
           previewTitle.textContent = mediaData.fileType || 'Media';
           previewContent.innerHTML = `
