@@ -228,7 +228,6 @@
     <div class="button-group" style="margin-top: 10px;">
       <button type="button" class="submit-btn" id="capturePhotoButton">Capture Photo</button>
       <button type="button" class="reset-btn" id="selectPhotosButton">Select Photos</button>
-      <button type="button" class="popup-btn" id="selectAudioButton">Select Video</button>
     </div>
     <div class="media-preview" id="mediaPreview">
       <h3 id="previewTitle"></h3>
@@ -321,11 +320,6 @@
     document.getElementById('selectPhotosButton').addEventListener('click', function () {
       eventBridge.sendToNative(ACTIONS.SELECT_MULTIPLE_PHOTOS, true);
     });
-
-    document.getElementById('selectAudioButton').addEventListener('click', function () {
-      eventBridge.sendToNative(ACTIONS.CAPTURE_VIDEO, true);
-    });
-
     // Nhận dữ liệu media từ native
     eventBridge.receiveDataFromNative(ACTIONS.MEDIA_CAPTURED, function (mediaData) {
       console.log('Media received from native:', mediaData);
@@ -335,11 +329,6 @@
         showMediaPreview(mediaData);
       }
     });
-    eventBridge.receiveDataFromNative(ACTIONS.SELECT_VIDEO, function (videoData) {
-      console.log('Video received from native:', videoData);
-      //showVideoPreview(videoData);
-    });
-    
     function showMultiplePhotosPreview(uris) {
       const previewArea = document.getElementById('mediaPreview');
       const previewContent = document.getElementById('previewContent');
