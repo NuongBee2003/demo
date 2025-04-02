@@ -377,13 +377,19 @@
           img.style.maxWidth = '100%';
           img.style.borderRadius = '4px';
 
-          // Add error handling for image loading
           img.onerror = function () {
             console.error('Failed to load image:', mediaData.uri);
             previewContent.innerHTML = '<p>Error loading image</p>';
           };
 
+          // Append file info below the image
+          const imgInfo = document.createElement('div');
+          imgInfo.innerHTML = `
+        <p><strong>File name:</strong> ${mediaData.name || 'Unknown'}</p>
+        <p><strong>File size:</strong> ${mediaData.size ? Math.round(mediaData.size / 1024) : 'N/A'} KB</p>
+      `;
           previewContent.appendChild(img);
+          previewContent.appendChild(imgInfo);
           break;
 
         case 'audio':
