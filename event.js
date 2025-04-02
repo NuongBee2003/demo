@@ -10,6 +10,7 @@ const ACTIONS = {
     CAPTURE_PHOTO: 'capturePhoto',
     CAPTURE_VIDEO: 'captureVideo',
     CAPTURE_AUDIO: 'captureAudio',
+    SELECT_AUDIO: 'selectAudio',
     
     // UI related actions
     OPEN_POPUP: 'openPopup',

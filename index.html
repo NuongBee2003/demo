@@ -174,6 +174,18 @@
     .student-table tr:hover {
       background-color: #f1f1f1;
     }
+    .media-preview {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #fff;
+      display: none; /* Ẩn mặc định */
+    }
+    .media-preview img {
+      max-width: 100%;
+      margin: 5px 0;
+    }
   </style>
 </head>
 
@@ -210,40 +222,14 @@
       </div>
 
     </form>
-    <!-- Add this below your existing form or within a new section -->
-    <div class="student-container" style="margin-top: 20px;">
-      <h2>Media Attachments</h2>
-
-      <!-- Media buttons section -->
-      <div class="media-buttons" style="display: flex; flex-direction: column; gap: 10px;">
-        <!-- Photo capture button with file types -->
-        <button type="button" class="media-btn" id="photoButton"
-          style="background-color: #9C27B0; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center;">
-          <span style="margin-right: 8px; font-size: 18px;">📷</span>
-          Photo (.jpg, .png)
-        </button>
-
-        <!-- Video capture button with file types -->
-        <button type="button" class="media-btn" id="videoButton"
-          style="background-color: #E91E63; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center;">
-          <span style="margin-right: 8px; font-size: 18px;">🎥</span>
-          Video (.mp4, .mov)
-        </button>
-
-        <!-- Audio capture button with file types -->
-        <button type="button" class="media-btn" id="audioButton"
-          style="background-color: #3F51B5; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center;">
-          <span style="margin-right: 8px; font-size: 18px;">🎤</span>
-          Audio (.mp3, .wav)
-        </button>
-      </div>
-
-      <!-- Media preview area -->
-      <div id="mediaPreview"
-        style="margin-top: 15px; display: none; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-        <h3 id="previewTitle" style="margin-top: 0; color: #333;">Media Preview</h3>
-        <div id="previewContent"></div>
-      </div>
+    <div class="button-group" style="margin-top: 10px;">
+      <button type="button" class="submit-btn" id="capturePhotoButton">Capture Photo</button>
+      <button type="button" class="reset-btn" id="selectPhotosButton">Select Photos</button>
+      <button type="button" class="popup-btn" id="selectAudioButton">Select Audio</button>
+    </div>
+    <div class="media-preview" id="mediaPreview">
+      <h3 id="previewTitle"></h3>
+      <div id="previewContent"></div>
     </div>
   </div>
 
@@ -327,31 +313,84 @@
       // (either from data.value or data.data based on the implementation)
       showStudentListPopup(studentData);
     });
-    document.getElementById('photoButton').addEventListener('click', function () {
-      eventBridge.sendToNative(ACTIONS.CAPTURE_PHOTO, {
-        allowedTypes: ['image/jpeg', 'image/png'],
-        maxSize: 5242880, // 5MB
-        quality: 'high'
-      });
+
+    document.getElementById('capturePhotoButton').addEventListener('click', function () {
+      eventBridge.sendToNative(ACTIONS.CAPTURE_PHOTO, true);
+    })
+
+    document.getElementById('selectPhotosButton').addEventListener('click', function () {
+      eventBridge.sendToNative('SELECT_MULTIPLE_PHOTOS', true);
     });
-    document.getElementById('videoButton').addEventListener('click', function () {
-      eventBridge.sendToNative(ACTIONS.CAPTURE_VIDEO, {
-        allowedTypes: ['video/mp4', 'video/quicktime'],
-        maxDuration: 30, // 30 seconds
-        maxSize: 20971520 // 20MB
-      });
+
+    document.getElementById('selectAudioButton').addEventListener('click', function () {
+      eventBridge.sendToNative(ACTIONS.SELECT_AUDIO, true);
     });
-    document.getElementById('audioButton').addEventListener('click', function () {
-      eventBridge.sendToNative(ACTIONS.CAPTURE_AUDIO, {
-        allowedTypes: ['audio/mp3', 'audio/wav'],
-        maxDuration: 60, // 60 seconds
-        maxSize: 10485760 // 10MB
-      });
-    });
-    // Set up receiver for media capture responses
+
+    // Nhận dữ liệu media từ native
     eventBridge.receiveDataFromNative(ACTIONS.MEDIA_CAPTURED, function (mediaData) {
-      showMediaPreview(mediaData);
+      if (mediaData.uris) { // Trường hợp chọn nhiều ảnh
+        const previewContent = document.getElementById('previewContent');
+        previewContent.innerHTML = '';
+        document.getElementById('previewTitle').textContent = 'Selected Photos';
+        mediaData.uris.forEach(uri => {
+          const img = document.createElement('img');
+          img.src = uri;
+          img.alt = 'Selected photo';
+          img.style.maxWidth = '100%';
+          img.style.borderRadius = '4px';
+          img.style.margin = '5px 0';
+          previewContent.appendChild(img);
+        });
+        document.getElementById('mediaPreview').style.display = 'block';
+      } else { // Trường hợp chụp ảnh hoặc chọn audio
+        showMediaPreview(mediaData);
+      }
     });
+
+    // Function hiển thị media (đã có, chỉnh sửa nhẹ để hỗ trợ khu vực preview)
+    function showMediaPreview(mediaData) {
+      const previewArea = document.getElementById('mediaPreview');
+      const previewContent = document.getElementById('previewContent');
+      const previewTitle = document.getElementById('previewTitle');
+
+      previewContent.innerHTML = '';
+
+      switch (mediaData.fileType) {
+        case 'image':
+        case 'image/jpeg':
+        case 'image/png':
+          previewTitle.textContent = 'Photo';
+          const img = document.createElement('img');
+          img.src = mediaData.uri;
+          img.alt = 'Captured photo';
+          img.style.maxWidth = '100%';
+          img.style.borderRadius = '4px';
+          previewContent.appendChild(img);
+          break;
+        case 'audio':
+        case 'audio/mp3':
+        case 'audio/wav':
+          previewTitle.textContent = 'Audio';
+          const audio = document.createElement('audio');
+          audio.src = mediaData.uri;
+          audio.controls = true;
+          audio.style.width = '100%';
+          previewContent.appendChild(audio);
+          break;
+        default:
+          previewTitle.textContent = 'File';
+          const fileInfo = document.createElement('div');
+          fileInfo.innerHTML = `
+            <p><strong>File name:</strong> ${mediaData.name || 'Unknown'}</p>
+            <p><strong>File type:</strong> ${mediaData.fileType}</p>
+            <p><strong>File size:</strong> ${Math.round(mediaData.size / 1024) || 'N/A'} KB</p>
+          `;
+          previewContent.appendChild(fileInfo);
+      }
+
+      previewArea.style.display = 'block';
+    }
+    
 
     // Function to display the captured/selected media
     function showMediaPreview(mediaData) {
