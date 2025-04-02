@@ -371,19 +371,22 @@
   let loadedCount = 0;
 
   // Sử dụng Intersection Observer để lazy load ảnh
-  const observer = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const imgContainer = entry.target;
-        const img = imgContainer.querySelector('img');
-        img.src = img.dataset.src; // Gán src khi ảnh vào tầm nhìn
-        observer.unobserve(imgContainer);
-      }
-    });
-  }, { rootMargin: '50px' });
+  const observer = new IntersectionObserver(
+    (entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const imgContainer = entry.target;
+          const img = imgContainer.querySelector('img');
+          img.src = img.dataset.src; // Gán src khi ảnh vào tầm nhìn
+          observer.unobserve(imgContainer);
+        }
+      });
+    },
+    { rootMargin: '50px' }
+  );
 
   // Tải từng ảnh
-  uris.forEach((uri, index) => {
+  uris.forEach((base64Uri, index) => {
     const imgContainer = document.createElement('div');
     imgContainer.style.width = '45%';
     imgContainer.style.position = 'relative';
@@ -404,7 +407,7 @@
     img.style.width = '100%';
     img.style.borderRadius = '4px';
     img.style.display = 'none'; // Ẩn ảnh cho đến khi tải xong
-    img.dataset.src = uri; // Lưu URI trong data attribute
+    img.dataset.src = base64Uri; // Lưu base64 URI trong data attribute
     img.alt = `Ảnh được chọn ${index + 1}`;
 
     // Xử lý khi ảnh tải thành công
@@ -418,9 +421,9 @@
     // Xử lý khi tải ảnh thất bại
     img.onerror = function () {
       loadedCount++;
-      console.error(`Không tải được ảnh ${index + 1}: ${uri}`);
+      console.error(`Không tải được ảnh ${index + 1}: ${base64Uri.substring(0, 50)}...`);
       statusDiv.textContent = `Đã tải ${loadedCount}/${uris.length} ảnh (có lỗi xảy ra)`;
-      placeholder.textContent = 'Không tải được (kiểm tra kết nối hoặc file)';
+      placeholder.textContent = 'Không tải được ảnh (dữ liệu không hợp lệ)';
       placeholder.style.color = 'red';
     };
 
