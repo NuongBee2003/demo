@@ -10,6 +10,7 @@ const ACTIONS = {
     CAPTURE_PHOTO: 'capturePhoto',
     CAPTURE_VIDEO: 'captureVideo',
     CAPTURE_AUDIO: 'captureAudio',
+    SELECT_VIDEO: 'mediaCaptured',
     SELECT_AUDIO: 'selectAudio',
 
     SELECT_MULTIPLE_PHOTOS: 'selectMultiplePhotos',

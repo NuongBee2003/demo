@@ -228,7 +228,7 @@
     <div class="button-group" style="margin-top: 10px;">
       <button type="button" class="submit-btn" id="capturePhotoButton">Capture Photo</button>
       <button type="button" class="reset-btn" id="selectPhotosButton">Select Photos</button>
-      <button type="button" class="popup-btn" id="selectAudioButton">Select Audio</button>
+      <button type="button" class="popup-btn" id="selectAudioButton">Select Video</button>
     </div>
     <div class="media-preview" id="mediaPreview">
       <h3 id="previewTitle"></h3>
@@ -323,7 +323,7 @@
     });
 
     document.getElementById('selectAudioButton').addEventListener('click', function () {
-      eventBridge.sendToNative(ACTIONS.SELECT_AUDIO, true);
+      eventBridge.sendToNative(ACTIONS.CAPTURE_VIDEO, true);
     });
 
     // Nhận dữ liệu media từ native
@@ -335,244 +335,307 @@
         showMediaPreview(mediaData);
       }
     });
-    function showMultiplePhotosPreview(uris) {
-  const previewArea = document.getElementById('mediaPreview');
-  const previewContent = document.getElementById('previewContent');
-  const previewTitle = document.getElementById('previewTitle');
+    eventBridge.receiveDataFromNative(ACTIONS.SELECT_VIDEO, function (videoData) {
+      console.log('Video received from native:', videoData);
+      showVideoPreview(videoData);
 
-  // Xóa nội dung cũ và đặt tiêu đề
-  previewContent.innerHTML = '';
-  previewTitle.textContent = 'Selected Photos';
+      function showVideoPreview(videoData) {
+        const previewArea = document.getElementById('mediaPreview');
+        const previewContent = document.getElementById('previewContent');
+        const previewTitle = document.getElementById('previewTitle');
 
-  // Kiểm tra mảng rỗng
-  if (uris.length === 0) {
-    const noPhotosMessage = document.createElement('p');
-    noPhotosMessage.textContent = 'Không có ảnh nào được chọn.';
-    previewContent.appendChild(noPhotosMessage);
-    previewArea.style.display = 'block';
-    return;
-  }
+        // Clear previous content
+        previewContent.innerHTML = '';
+        previewTitle.textContent = 'Video';
 
-  // Thêm bộ đếm trạng thái tải ảnh
-  const statusDiv = document.createElement('div');
-  statusDiv.textContent = `Đang tải 0/${uris.length} ảnh...`;
-  statusDiv.style.marginBottom = '10px';
-  previewContent.appendChild(statusDiv);
-
-  // Tạo container cho gallery ảnh
-  const galleryDiv = document.createElement('div');
-  galleryDiv.style.display = 'flex';
-  galleryDiv.style.flexWrap = 'wrap';
-  galleryDiv.style.gap = '10px';
-  galleryDiv.style.justifyContent = 'center';
-  previewContent.appendChild(galleryDiv);
-
-  // Theo dõi tiến trình tải ảnh
-  let loadedCount = 0;
-
-  // Sử dụng Intersection Observer để lazy load ảnh
-  const observer = new IntersectionObserver(
-    (entries, observer) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const imgContainer = entry.target;
-          const img = imgContainer.querySelector('img');
-          img.src = img.dataset.src; // Gán src khi ảnh vào tầm nhìn
-          observer.unobserve(imgContainer);
+        if (!videoData || !videoData.uri) {
+          previewContent.innerHTML = '<p>Error: Invalid video data received</p>';
+          previewArea.style.display = 'block';
+          return;
         }
+
+        // Create video player
+        const video = document.createElement('video');
+        video.controls = true;
+        video.style.width = '100%';
+        video.style.maxHeight = '300px';
+        video.style.borderRadius = '4px';
+        video.src = videoData.uri;
+
+        video.onerror = function () {
+          previewContent.innerHTML = '<p style="color: red;">Error loading video file</p>';
+        };
+
+        // Add video information
+        const videoInfo = document.createElement('div');
+        videoInfo.style.marginTop = '10px';
+        videoInfo.innerHTML = `
+          <p><strong>File:</strong> ${videoData.name || 'Unknown'}</p>
+          <p><strong>Size:</strong> ${videoData.size ? Math.round(videoData.size / 1024) + ' KB' : 'Unknown'}</p>
+          <p><strong>Duration:</strong> ${videoData.duration ? formatDuration(videoData.duration) : 'Unknown'}</p>
+          <p><strong>Dimensions:</strong> ${videoData.width || 0} × ${videoData.height || 0}</p>
+        `;
+
+        previewContent.appendChild(video);
+        previewContent.appendChild(videoInfo);
+
+        // Add close button
+        const closeButton = document.createElement('button');
+        closeButton.textContent = 'Close Video';
+        closeButton.style.display = 'block';
+        closeButton.style.margin = '15px auto 0';
+        closeButton.style.padding = '8px 16px';
+        closeButton.style.backgroundColor = '#f44336';
+        closeButton.style.color = 'white';
+        closeButton.style.border = 'none';
+        closeButton.style.borderRadius = '4px';
+        closeButton.onclick = function () {
+          previewArea.style.display = 'none';
+          video.pause();
+        };
+
+        previewContent.appendChild(closeButton);
+        previewArea.style.display = 'block';
+      }
+    });
+    function showMultiplePhotosPreview(uris) {
+      const previewArea = document.getElementById('mediaPreview');
+      const previewContent = document.getElementById('previewContent');
+      const previewTitle = document.getElementById('previewTitle');
+
+      // Xóa nội dung cũ và đặt tiêu đề
+      previewContent.innerHTML = '';
+      previewTitle.textContent = 'Selected Photos';
+
+      // Kiểm tra mảng rỗng
+      if (uris.length === 0) {
+        const noPhotosMessage = document.createElement('p');
+        noPhotosMessage.textContent = 'Không có ảnh nào được chọn.';
+        previewContent.appendChild(noPhotosMessage);
+        previewArea.style.display = 'block';
+        return;
+      }
+
+      // Thêm bộ đếm trạng thái tải ảnh
+      const statusDiv = document.createElement('div');
+      statusDiv.textContent = `Đang tải 0/${uris.length} ảnh...`;
+      statusDiv.style.marginBottom = '10px';
+      previewContent.appendChild(statusDiv);
+
+      // Tạo container cho gallery ảnh
+      const galleryDiv = document.createElement('div');
+      galleryDiv.style.display = 'flex';
+      galleryDiv.style.flexWrap = 'wrap';
+      galleryDiv.style.gap = '10px';
+      galleryDiv.style.justifyContent = 'center';
+      previewContent.appendChild(galleryDiv);
+
+      // Theo dõi tiến trình tải ảnh
+      let loadedCount = 0;
+
+      // Sử dụng Intersection Observer để lazy load ảnh
+      const observer = new IntersectionObserver(
+        (entries, observer) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const imgContainer = entry.target;
+              const img = imgContainer.querySelector('img');
+              img.src = img.dataset.src; // Gán src khi ảnh vào tầm nhìn
+              observer.unobserve(imgContainer);
+            }
+          });
+        },
+        { rootMargin: '50px' }
+      );
+
+      // Tải từng ảnh
+      uris.forEach((base64Uri, index) => {
+        const imgContainer = document.createElement('div');
+        imgContainer.style.width = '45%';
+        imgContainer.style.position = 'relative';
+        imgContainer.style.margin = '5px';
+
+        // Tạo placeholder trong khi tải
+        const placeholder = document.createElement('div');
+        placeholder.textContent = `Đang tải ảnh ${index + 1}...`;
+        placeholder.style.height = '100px';
+        placeholder.style.display = 'flex';
+        placeholder.style.justifyContent = 'center';
+        placeholder.style.alignItems = 'center';
+        placeholder.style.border = '1px dashed #ccc';
+        imgContainer.appendChild(placeholder);
+
+        // Tạo phần tử ảnh
+        const img = document.createElement('img');
+        img.style.width = '100%';
+        img.style.borderRadius = '4px';
+        img.style.display = 'none'; // Ẩn ảnh cho đến khi tải xong
+        img.dataset.src = base64Uri; // Lưu base64 URI trong data attribute
+        img.alt = `Ảnh được chọn ${index + 1}`;
+
+        // Xử lý khi ảnh tải thành công
+        img.onload = function () {
+          loadedCount++;
+          statusDiv.textContent = `Đã tải ${loadedCount}/${uris.length} ảnh`;
+          placeholder.remove();
+          img.style.display = 'block';
+        };
+
+        // Xử lý khi tải ảnh thất bại
+        img.onerror = function () {
+          loadedCount++;
+          console.error(`Không tải được ảnh ${index + 1}: ${base64Uri.substring(0, 50)}...`);
+          statusDiv.textContent = `Đã tải ${loadedCount}/${uris.length} ảnh (có lỗi xảy ra)`;
+          placeholder.textContent = 'Không tải được ảnh (dữ liệu không hợp lệ)';
+          placeholder.style.color = 'red';
+        };
+
+        imgContainer.appendChild(img);
+        galleryDiv.appendChild(imgContainer);
+
+        // Quan sát container để lazy load
+        observer.observe(imgContainer);
       });
-    },
-    { rootMargin: '50px' }
-  );
 
-  // Tải từng ảnh
-  uris.forEach((base64Uri, index) => {
-    const imgContainer = document.createElement('div');
-    imgContainer.style.width = '45%';
-    imgContainer.style.position = 'relative';
-    imgContainer.style.margin = '5px';
+      // Thêm nút đóng
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'Đóng Gallery';
+      closeButton.style.display = 'block';
+      closeButton.style.margin = '15px auto 0';
+      closeButton.style.padding = '8px 16px';
+      closeButton.style.backgroundColor = '#f44336';
+      closeButton.style.color = 'white';
+      closeButton.style.border = 'none';
+      closeButton.style.borderRadius = '4px';
+      closeButton.onclick = function () {
+        previewArea.style.display = 'none';
+      };
+      previewContent.appendChild(closeButton);
 
-    // Tạo placeholder trong khi tải
-    const placeholder = document.createElement('div');
-    placeholder.textContent = `Đang tải ảnh ${index + 1}...`;
-    placeholder.style.height = '100px';
-    placeholder.style.display = 'flex';
-    placeholder.style.justifyContent = 'center';
-    placeholder.style.alignItems = 'center';
-    placeholder.style.border = '1px dashed #ccc';
-    imgContainer.appendChild(placeholder);
-
-    // Tạo phần tử ảnh
-    const img = document.createElement('img');
-    img.style.width = '100%';
-    img.style.borderRadius = '4px';
-    img.style.display = 'none'; // Ẩn ảnh cho đến khi tải xong
-    img.dataset.src = base64Uri; // Lưu base64 URI trong data attribute
-    img.alt = `Ảnh được chọn ${index + 1}`;
-
-    // Xử lý khi ảnh tải thành công
-    img.onload = function () {
-      loadedCount++;
-      statusDiv.textContent = `Đã tải ${loadedCount}/${uris.length} ảnh`;
-      placeholder.remove();
-      img.style.display = 'block';
-    };
-
-    // Xử lý khi tải ảnh thất bại
-    img.onerror = function () {
-      loadedCount++;
-      console.error(`Không tải được ảnh ${index + 1}: ${base64Uri.substring(0, 50)}...`);
-      statusDiv.textContent = `Đã tải ${loadedCount}/${uris.length} ảnh (có lỗi xảy ra)`;
-      placeholder.textContent = 'Không tải được ảnh (dữ liệu không hợp lệ)';
-      placeholder.style.color = 'red';
-    };
-
-    imgContainer.appendChild(img);
-    galleryDiv.appendChild(imgContainer);
-
-    // Quan sát container để lazy load
-    observer.observe(imgContainer);
-  });
-
-  // Thêm nút đóng
-  const closeButton = document.createElement('button');
-  closeButton.textContent = 'Đóng Gallery';
-  closeButton.style.display = 'block';
-  closeButton.style.margin = '15px auto 0';
-  closeButton.style.padding = '8px 16px';
-  closeButton.style.backgroundColor = '#f44336';
-  closeButton.style.color = 'white';
-  closeButton.style.border = 'none';
-  closeButton.style.borderRadius = '4px';
-  closeButton.onclick = function () {
-    previewArea.style.display = 'none';
-  };
-  previewContent.appendChild(closeButton);
-
-  // Hiển thị khu vực xem trước
-  previewArea.style.display = 'block';
-}
+      // Hiển thị khu vực xem trước
+      previewArea.style.display = 'block';
+    }
 
     function showMediaPreview(mediaData) {
-  const previewArea = document.getElementById('mediaPreview');
-  const previewContent = document.getElementById('previewContent');
-  const previewTitle = document.getElementById('previewTitle');
+      const previewArea = document.getElementById('mediaPreview');
+      const previewContent = document.getElementById('previewContent');
+      const previewTitle = document.getElementById('previewTitle');
 
-  // Clear previous content
-  previewContent.innerHTML = '';
+      // Clear previous content
+      previewContent.innerHTML = '';
 
-  if (!mediaData) {
-    previewTitle.textContent = 'Error';
-    previewContent.innerHTML = '<p>No media data received</p>';
-    previewArea.style.display = 'block';
-    return;
-  }
+      if (!mediaData) {
+        previewTitle.textContent = 'Error';
+        previewContent.innerHTML = '<p>No media data received</p>';
+        previewArea.style.display = 'block';
+        return;
+      }
 
-  switch (mediaData.fileType) {
-    case 'image':
-    case 'image/jpeg':
-    case 'image/png':
-      previewTitle.textContent = 'Photo';
-      const img = document.createElement('img');
-      img.src = mediaData.uri;
-      img.alt = 'Captured photo';
-      img.style.maxWidth = '100%';
-      img.style.borderRadius = '4px';
+      switch (mediaData.fileType) {
+        case 'image':
+        case 'image/jpeg':
+        case 'image/png':
+          previewTitle.textContent = 'Photo';
+          const img = document.createElement('img');
+          img.src = mediaData.uri;
+          img.alt = 'Captured photo';
+          img.style.maxWidth = '100%';
+          img.style.borderRadius = '4px';
 
-      img.onerror = function () {
-        console.error('Failed to load image:', mediaData.uri);
-        previewContent.innerHTML = '<p>Error loading image</p>';
-      };
+          img.onerror = function () {
+            console.error('Failed to load image:', mediaData.uri);
+            previewContent.innerHTML = '<p>Error loading image</p>';
+          };
 
-      const imgInfo = document.createElement('div');
-      imgInfo.innerHTML = `
+          const imgInfo = document.createElement('div');
+          imgInfo.innerHTML = `
         <p><strong>File name:</strong> ${mediaData.name || 'Unknown'}</p>
         <p><strong>File size:</strong> ${mediaData.size ? Math.round(mediaData.size / 1024) : 'N/A'} KB</p>
       `;
-      previewContent.appendChild(img);
-      previewContent.appendChild(imgInfo);
-      break;
-      
-    case 'audio':
-    case 'audio/mpeg':
-    case 'audio/mp3':
-    case 'audio/wav':
-    case 'audio/m4a':
-      previewTitle.textContent = 'Audio';
-      
-      // Create audio player
-      const audio = document.createElement('audio');
-      audio.controls = true;
-      audio.style.width = '100%';
-      audio.style.margin = '10px 0';
-      
-      // Add source with error handling
-      audio.src = mediaData.uri;
-      audio.onerror = function() {
-        console.error('Failed to load audio:', mediaData.uri);
-        previewContent.innerHTML = '<p style="color: red;">Error loading audio file</p>';
-      };
-      
-      // Add file info
-      const audioInfo = document.createElement('div');
-      audioInfo.innerHTML = `
+          previewContent.appendChild(img);
+          previewContent.appendChild(imgInfo);
+          break;
+
+        case 'audio':
+        case 'audio/mpeg':
+        case 'audio/mp3':
+        case 'audio/wav':
+        case 'audio/m4a':
+          previewTitle.textContent = 'Audio';
+
+          // Create audio player
+          const audio = document.createElement('audio');
+          audio.controls = true;
+          audio.style.width = '100%';
+          audio.style.margin = '10px 0';
+
+          // Add source with error handling
+          audio.src = mediaData.uri;
+          audio.onerror = function () {
+            console.error('Failed to load audio:', mediaData.uri);
+            previewContent.innerHTML = '<p style="color: red;">Error loading audio file</p>';
+          };
+
+          // Add file info
+          const audioInfo = document.createElement('div');
+          audioInfo.innerHTML = `
         <p><strong>File name:</strong> ${mediaData.name || 'Unknown'}</p>
         <p><strong>File type:</strong> ${mediaData.fileType || 'Unknown'}</p>
         <p><strong>Duration:</strong> ${mediaData.duration ? formatDuration(mediaData.duration) : 'Unknown'}</p>
       `;
-      
-      // Create waveform visualization placeholder (if needed)
-      const waveformPlaceholder = document.createElement('div');
-      waveformPlaceholder.style.height = '50px';
-      waveformPlaceholder.style.backgroundColor = '#f0f0f0';
-      waveformPlaceholder.style.borderRadius = '4px';
-      waveformPlaceholder.style.marginTop = '10px';
-      waveformPlaceholder.textContent = 'Audio Waveform Visualization';
-      waveformPlaceholder.style.display = 'flex';
-      waveformPlaceholder.style.alignItems = 'center';
-      waveformPlaceholder.style.justifyContent = 'center';
-      
-      previewContent.appendChild(audio);
-      previewContent.appendChild(audioInfo);
-      previewContent.appendChild(waveformPlaceholder);
-      break;
-      
-    default:
-      previewTitle.textContent = mediaData.fileType || 'Media';
-      previewContent.innerHTML = `
+
+          // Create waveform visualization placeholder (if needed)
+          const waveformPlaceholder = document.createElement('div');
+          waveformPlaceholder.style.height = '50px';
+          waveformPlaceholder.style.backgroundColor = '#f0f0f0';
+          waveformPlaceholder.style.borderRadius = '4px';
+          waveformPlaceholder.style.marginTop = '10px';
+          waveformPlaceholder.textContent = 'Audio Waveform Visualization';
+          waveformPlaceholder.style.display = 'flex';
+          waveformPlaceholder.style.alignItems = 'center';
+          waveformPlaceholder.style.justifyContent = 'center';
+
+          previewContent.appendChild(audio);
+          previewContent.appendChild(audioInfo);
+          previewContent.appendChild(waveformPlaceholder);
+          break;
+
+        default:
+          previewTitle.textContent = mediaData.fileType || 'Media';
+          previewContent.innerHTML = `
         <div style="padding: 15px; background-color: #f9f9f9; border-radius: 4px;">
           <p><strong>File type:</strong> ${mediaData.fileType || 'Unknown'}</p>
           <p><strong>File name:</strong> ${mediaData.name || 'Unknown'}</p>
           <p><strong>URI:</strong> ${mediaData.uri ? mediaData.uri.substring(0, 30) + '...' : 'Not provided'}</p>
         </div>
       `;
-  }
+      }
 
-  // Add close button
-  const closeButton = document.createElement('button');
-  closeButton.textContent = 'Close Preview';
-  closeButton.style.display = 'block';
-  closeButton.style.margin = '15px auto 0';
-  closeButton.style.padding = '8px 16px';
-  closeButton.style.backgroundColor = '#f44336';
-  closeButton.style.color = 'white';
-  closeButton.style.border = 'none';
-  closeButton.style.borderRadius = '4px';
-  closeButton.onclick = function() {
-    previewArea.style.display = 'none';
-  };
-  previewContent.appendChild(closeButton);
-  
-  // Show the preview area
-  previewArea.style.display = 'block';
-}
+      // Add close button
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'Close Preview';
+      closeButton.style.display = 'block';
+      closeButton.style.margin = '15px auto 0';
+      closeButton.style.padding = '8px 16px';
+      closeButton.style.backgroundColor = '#f44336';
+      closeButton.style.color = 'white';
+      closeButton.style.border = 'none';
+      closeButton.style.borderRadius = '4px';
+      closeButton.onclick = function () {
+        previewArea.style.display = 'none';
+      };
+      previewContent.appendChild(closeButton);
 
-// Helper function for formatting audio duration
-function formatDuration(seconds) {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-}
+      // Show the preview area
+      previewArea.style.display = 'block';
+    }
+
+    // Helper function for formatting audio duration
+    function formatDuration(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
 
     // Function to show student list in popup - creates table rows dynamically
     function showStudentListPopup(students) {
