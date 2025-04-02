@@ -329,6 +329,8 @@
     // Nhận dữ liệu media từ native
     eventBridge.receiveDataFromNative(ACTIONS.MEDIA_CAPTURED, function (mediaData) {
       console.log('Media received from native:', mediaData);
+      
+
       if (mediaData.uris) { // Multiple photos case
         const previewContent = document.getElementById('previewContent');
         previewContent.innerHTML = '';
@@ -411,7 +413,7 @@
         <p><strong>File type:</strong> ${mediaData.fileType || 'Unknown'}</p>
         <p><strong>File size:</strong> ${mediaData.size ? Math.round(mediaData.size / 1024) : 'N/A'} KB</p>
         <p><strong>URI:</strong> ${mediaData.uri ? mediaData.uri.substring(0, 30) + '...' : 'Not provided'}</p>
-        <p><img src="${mediaData.name||'Unknown'}"></p>
+        
       `;
           previewContent.appendChild(fileInfo);
       }
