@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* Basic page styling for responsive layout */
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f5f5f5;
+    }
+
+    /* Main container styling */
+    .student-container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      width: 300px;
+    }
+
+    /* Header styling */
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    /* Form field group styling */
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    /* Button container styling */
+    .button-group {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    /* General button styling */
+    button {
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      width: 32%;
+      /* Adjusted to fit 3 buttons */
+    }
+
+    /* Add button styling */
+    .submit-btn {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    /* Reset button styling */
+    .reset-btn {
+      background-color: #2196F3;
+      color: white;
+    }
+
+    /* Popup button styling */
+    .popup-btn {
+      background-color: #FF9800;
+      /* Different color for popup button */
+      color: white;
+    }
+
+    /* Popup styles */
+    /* Overlay that covers the entire screen */
+    .popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      visibility: hidden;
+      opacity: 0;
+      transition: visibility 0s linear 0.25s, opacity 0.25s 0s;
+    }
+
+    /* Main popup content container */
+    .popup-content {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    /* Class to show the popup */
+    .popup-visible {
+      visibility: visible;
+      opacity: 1;
+      transition-delay: 0s;
+    }
+
+    /* Popup header styling */
+    .popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+    }
+
+    .popup-header h3 {
+      margin: 0;
+      color: #333;
+    }
+
+    /* Close button styling */
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #777;
+      width: auto;
+      padding: 5px;
+    }
+
+    /* Table styling for student list */
+    .student-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .student-table th,
+    .student-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    .student-table th {
+      background-color: #f2f2f2;
+      color: #333;
+    }
+
+    .student-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .student-table tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    .media-preview {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #fff;
+      display: none;
+      /* Ẩn mặc định */
+    }
+
+    .media-preview img {
+      max-width: 100%;
+      margin: 5px 0;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Main student input form container -->
+  <div class="student-container">
+    <h2>Enter Student Information</h2>
+    <form id="studentForm">
+      <!-- Student ID input field -->
+      <div class="input-group">
+        <label for="studentId">Student ID:</label>
+        <input type="text" id="studentId" name="studentId" required>
+      </div>
+      <!-- Full name input field -->
+      <div class="input-group">
+        <label for="fullName">Full Name:</label>
+        <input type="text" id="fullName" name="fullName" required>
+      </div>
+      <!-- Date of birth input field -->
+      <div class="input-group">
+        <label for="dateOfBirth">Date of Birth:</label>
+        <input type="date" id="dateOfBirth" name="dateOfBirth" required>
+      </div>
+      <!-- Class input field -->
+      <div class="input-group">
+        <label for="className">Class:</label>
+        <input type="text" id="className" name="className" required>
+      </div>
+      <!-- Action buttons -->
+      <div class="button-group" style="flex-direction: column; gap: 10px;">
+        <button type="button" class="submit-btn" id="submitButton" style="width: 100%;">Add</button>
+        <button type="reset" class="reset-btn" id="resetButton" style="width: 100%;">Reset</button>
+        <button type="button" class="popup-btn" id="openPopupButton" style="width: 100%;">Open Popup</button>
+      </div>
+
+    </form>
+    <div class="button-group" style="margin-top: 10px;">
+      <button type="button" class="submit-btn" id="capturePhotoButton">Capture Photo</button>
+      <button type="button" class="reset-btn" id="captureVideoButton">Capture Video</button>
+      <button type="button" class="popup-btn" id="captureAudioButton">Capture Audio</button>
+    </div>
+    <div class="button-group" style="margin-top: 10px;">
+      <button type="button" class="reset-btn" id="selectPhotosButton">Select Photos</button>
+      <button type="button" class="popup-btn" id="selectVideo">Select Video</button>
+      <button type="button" class="submit-btn" id="selectAudioButton">Select Audio</button>
+    </div>
+    <div class="media-preview" id="mediaPreview">
+      <h3 id="previewTitle"></h3>
+      <div id="previewContent"></div>
+    </div>
+  </div>
+
+
+  <!-- Student List Popup - Shows the list of students from React Native -->
+  <div id="studentPopup" class="popup-overlay">
+    <div class="popup-content">
+      <div class="popup-header">
+        <h3>Student List from React-Native</h3>
+        <button class="close-btn" id="closePopup">×</button>
+      </div>
+      <div id="studentListContainer">
+        <table class="student-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Full Name</th>
+              <th>Date of Birth</th>
+              <th>Class</th>
+            </tr>
+          </thead>
+          <tbody id="studentTableBody">
+            <!-- Student rows will be inserted here dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <script src="event.js"></script>
+  <script>
+    const eventBridge = new EventBridge();
+    // When user clicks the Add button - collects form data and sends to React Native
+    document.getElementById('submitButton').addEventListener('click', function () {
+      // Get all input values
+      const studentId = document.getElementById('studentId').value;
+      const fullName = document.getElementById('fullName').value;
+      const dateOfBirth = document.getElementById('dateOfBirth').value;
+      const className = document.getElementById('className').value;
+
+      // Create a new Event object
+
+      // Validate that all fields are filled
+      if (studentId && fullName && dateOfBirth && className) {
+        alert('Student information saved successfully');
+
+        // Create student data object with form values
+        const studentData = {
+          studentId,
+          fullName,
+          dateOfBirth,
+          className
+        };
+        // Send data to React Native with type and value format
+
+        eventBridge.sendToNative(ACTIONS.SAVE_STUDENT, studentData);
+      } else {
+        alert('Please enter all student information');
+      }
+    });
+
+    // Reset Button - clears form and notifies React Native
+    document.getElementById('resetButton').addEventListener('click', function () {
+      // Form reset happens automatically due to type="reset"
+      // Just notify React Native that form was reset
+      eventBridge.sendToNative(ACTIONS.FORM_RESET, true);
+    });
+    document.getElementById('captureVideoButton').addEventListener('click', function () {
+      eventBridge.sendToNative(ACTIONS.CAPTURE_VIDEO, true);
+    });
+    document.getElementById('captureAudioButton').addEventListener('click', function () {
+      eventBridge.sendToNative(ACTIONS.CAPTURE_AUDIO, true);
+    });
+
+    // Open Popup Button - shows popup and requests data from React Native
+    document.getElementById('openPopupButton').addEventListener('click', function () {
+      // Display the popup immediately
+      document.getElementById('studentPopup').classList.add('popup-visible');
+
+      // Send event to native to request student list
+      eventBridge.sendToNative(ACTIONS.OPEN_POPUP, true);
+    });
+    
+    eventBridge.receiveDataFromNative(ACTIONS.GET_STUDENT_LIST, function (studentData) {
+      // Now studentData contains the actual student list 
+      // (either from data.value or data.data based on the implementation)
+      showStudentListPopup(studentData);
+    });
+
+    document.getElementById('capturePhotoButton').addEventListener('click', function () {
+      eventBridge.sendToNative(ACTIONS.CAPTURE_PHOTO, true);
+    })
+
+    document.getElementById('selectPhotosButton').addEventListener('click', function () {
+      eventBridge.sendToNative(ACTIONS.SELECT_MULTIPLE_PHOTOS, true);
+    });
+    document.getElementById('selectVideo').addEventListener('click', function () {
+      eventBridge.sendToNative(ACTIONS.OPEN_VIDEO, true);
+    });
+
+    eventBridge.receiveDataFromNative(ACTIONS.GET_VIDEO, function (videoData){
+      if(videoData.uris){
+        showVideoPreview(videoData.uris);
+      }
+    })
+
+    // Nhận dữ liệu media từ native
+    eventBridge.receiveDataFromNative(ACTIONS.MEDIA_CAPTURED, function (mediaData) {
+      console.log('Media received from native:', mediaData);
+      if (mediaData.uris && Array.isArray(mediaData.uris)) { // Multiple photos case
+        showMultiplePhotosPreview(mediaData.uris);
+      } else { // Trường hợp chụp ảnh hoặc chọn audio
+        showMediaPreview(mediaData);
+      }
+    });
+
+    function showVideoPreview(uris){
+      const previewArea = document.getElementById('mediaPreview');
+      const previewContent = document.getElementById('previewContent');
+      const previewTitle = document.getElementById('previewTitle');
+
+      alert('Video preview function called with URIs: ' + uris);
+      // Xóa nội dung cũ và đặt tiêu đề
+      previewContent.innerHTML = '';
+      previewTitle.textContent = 'Selected Video';
+
+      // Kiểm tra mảng rỗng
+      if (uris.length === 0) {
+        const noPhotosMessage = document.createElement('p');
+        noPhotosMessage.textContent = 'Không có video nào được chọn.';
+        previewContent.appendChild(noPhotosMessage);
+        previewArea.style.display = 'block';
+        return;
+      }
+
+      // Tạo phần tử video
+      const video = document.createElement('video');
+      video.src = uris[0]; // Chỉ hiển thị video đầu tiên trong danh sách
+      video.controls = true;
+      video.style.width = '100%';
+      video.style.borderRadius = '4px';
+      previewContent.appendChild(video);
+
+      // Thêm nút đóng
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'Đóng Video';
+      closeButton.style.display = 'block';
+      closeButton.style.margin = '15px auto 0';
+      closeButton.style.padding = '8px 16px';
+      closeButton.style.backgroundColor = '#f44336';
+      closeButton.style.color = 'white';
+      closeButton.style.border = 'none';
+      closeButton.style.borderRadius = '4px';
+      closeButton.onclick = function () {
+        previewArea.style.display = 'none';
+        video.pause(); // Dừng video khi đóng
+        video.src = ''; // Giải phóng tài nguyên
+      };
+      previewContent.appendChild(closeButton);
+
+      // Hiển thị khu vực xem trước
+      previewArea.style.display = 'block';
+    }
+
+    function showMultiplePhotosPreview(uris) {
+      const previewArea = document.getElementById('mediaPreview');
+      const previewContent = document.getElementById('previewContent');
+      const previewTitle = document.getElementById('previewTitle');
+
+      // Xóa nội dung cũ và đặt tiêu đề
+      previewContent.innerHTML = '';
+      previewTitle.textContent = 'Selected Photos';
+
+      // Kiểm tra mảng rỗng
+      if (uris.length === 0) {
+        const noPhotosMessage = document.createElement('p');
+        noPhotosMessage.textContent = 'Không có ảnh nào được chọn.';
+        previewContent.appendChild(noPhotosMessage);
+        previewArea.style.display = 'block';
+        return;
+      }
+
+      // Thêm bộ đếm trạng thái tải ảnh
+      const statusDiv = document.createElement('div');
+      statusDiv.textContent = `Đang tải 0/${uris.length} ảnh...`;
+      statusDiv.style.marginBottom = '10px';
+      previewContent.appendChild(statusDiv);
+
+      // Tạo container cho gallery ảnh
+      const galleryDiv = document.createElement('div');
+      galleryDiv.style.display = 'flex';
+      galleryDiv.style.flexWrap = 'wrap';
+      galleryDiv.style.gap = '10px';
+      galleryDiv.style.justifyContent = 'center';
+      previewContent.appendChild(galleryDiv);
+
+      // Theo dõi tiến trình tải ảnh
+      let loadedCount = 0;
+
+      // Sử dụng Intersection Observer để lazy load ảnh
+      const observer = new IntersectionObserver(
+        (entries, observer) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const imgContainer = entry.target;
+              const img = imgContainer.querySelector('img');
+              img.src = img.dataset.src; // Gán src khi ảnh vào tầm nhìn
+              observer.unobserve(imgContainer);
+            }
+          });
+        },
+        { rootMargin: '50px' }
+      );
+
+      // Tải từng ảnh
+      uris.forEach((base64Uri, index) => {
+        const imgContainer = document.createElement('div');
+        imgContainer.style.width = '45%';
+        imgContainer.style.position = 'relative';
+        imgContainer.style.margin = '5px';
+
+        // Tạo placeholder trong khi tải
+        const placeholder = document.createElement('div');
+        placeholder.textContent = `Đang tải ảnh ${index + 1}...`;
+        placeholder.style.height = '100px';
+        placeholder.style.display = 'flex';
+        placeholder.style.justifyContent = 'center';
+        placeholder.style.alignItems = 'center';
+        placeholder.style.border = '1px dashed #ccc';
+        imgContainer.appendChild(placeholder);
+
+        // Tạo phần tử ảnh
+        const img = document.createElement('img');
+        img.style.width = '100%';
+        img.style.borderRadius = '4px';
+        img.style.display = 'none'; // Ẩn ảnh cho đến khi tải xong
+        img.dataset.src = base64Uri; // Lưu base64 URI trong data attribute
+        img.alt = `Ảnh được chọn ${index + 1}`;
+
+        // Xử lý khi ảnh tải thành công
+        img.onload = function () {
+          loadedCount++;
+          statusDiv.textContent = `Đã tải ${loadedCount}/${uris.length} ảnh`;
+          placeholder.remove();
+          img.style.display = 'block';
+        };
+
+        // Xử lý khi tải ảnh thất bại
+        img.onerror = function () {
+          loadedCount++;
+          console.error(`Không tải được ảnh ${index + 1}: ${base64Uri.substring(0, 50)}...`);
+          statusDiv.textContent = `Đã tải ${loadedCount}/${uris.length} ảnh (có lỗi xảy ra)`;
+          placeholder.textContent = 'Không tải được ảnh (dữ liệu không hợp lệ)';
+          placeholder.style.color = 'red';
+        };
+
+        imgContainer.appendChild(img);
+        galleryDiv.appendChild(imgContainer);
+
+        // Quan sát container để lazy load
+        observer.observe(imgContainer);
+      });
+
+      // Thêm nút đóng
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'Đóng Gallery';
+      closeButton.style.display = 'block';
+      closeButton.style.margin = '15px auto 0';
+      closeButton.style.padding = '8px 16px';
+      closeButton.style.backgroundColor = '#f44336';
+      closeButton.style.color = 'white';
+      closeButton.style.border = 'none';
+      closeButton.style.borderRadius = '4px';
+      closeButton.onclick = function () {
+        previewArea.style.display = 'none';
+      };
+      previewContent.appendChild(closeButton);
+
+      // Hiển thị khu vực xem trước
+      previewArea.style.display = 'block';
+    }
+
+    function showMediaPreview(mediaData) {
+      const previewArea = document.getElementById('mediaPreview');
+      const previewContent = document.getElementById('previewContent');
+      const previewTitle = document.getElementById('previewTitle');
+
+      // Clear previous content
+      previewContent.innerHTML = '';
+
+      if (!mediaData) {
+        previewTitle.textContent = 'Error';
+        previewContent.innerHTML = '<p>No media data received</p>';
+        previewArea.style.display = 'block';
+        return;
+      }
+
+      switch (mediaData.fileType) {
+        case 'image':
+        case 'image/jpeg':
+        case 'image/png':
+          previewTitle.textContent = 'Photo';
+          const img = document.createElement('img');
+          img.src = mediaData.uri;
+          img.alt = 'Captured photo';
+          img.style.maxWidth = '100%';
+          img.style.borderRadius = '4px';
+
+          img.onerror = function () {
+            console.error('Failed to load image:', mediaData.uri);
+            previewContent.innerHTML = '<p>Error loading image</p>';
+          };
+
+          const imgInfo = document.createElement('div');
+          imgInfo.innerHTML = `
+        <p><strong>File name:</strong> ${mediaData.name || 'Unknown'}</p>
+        <p><strong>File size:</strong> ${mediaData.size ? Math.round(mediaData.size / 1024) : 'N/A'} KB</p>
+      `;
+          previewContent.appendChild(img);
+          previewContent.appendChild(imgInfo);
+          break;
+        default:
+          previewTitle.textContent = mediaData.fileType || 'Media';
+          previewContent.innerHTML = `
+        <div style="padding: 15px; background-color: #f9f9f9; border-radius: 4px;">
+          <p><strong>File type:</strong> ${mediaData.fileType || 'Unknown'}</p>
+          <p><strong>File name:</strong> ${mediaData.name || 'Unknown'}</p>
+          <p><strong>URI:</strong> ${mediaData.uri ? mediaData.uri.substring(0, 30) + '...' : 'Not provided'}</p>
+        </div>
+      `;
+      }
+
+      // Add close button
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'Close Preview';
+      closeButton.style.display = 'block';
+      closeButton.style.margin = '15px auto 0';
+      closeButton.style.padding = '8px 16px';
+      closeButton.style.backgroundColor = '#f44336';
+      closeButton.style.color = 'white';
+      closeButton.style.border = 'none';
+      closeButton.style.borderRadius = '4px';
+      closeButton.onclick = function () {
+        previewArea.style.display = 'none';
+      };
+      previewContent.appendChild(closeButton);
+
+      // Show the preview area
+      previewArea.style.display = 'block';
+    }
+
+    // Helper function for formatting audio duration
+    function formatDuration(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    // Function to show student list in popup - creates table rows dynamically
+    function showStudentListPopup(students) {
+      // Get table body element and clear any existing rows
+      const tableBody = document.getElementById('studentTableBody');
+      tableBody.innerHTML = '';
+
+      // Loop through student array and create table rows
+      students.forEach(student => {
+        const row = document.createElement('tr');
+
+        // Create and populate ID cell
+        const idCell = document.createElement('td');
+        idCell.textContent = student.studentId;
+        row.appendChild(idCell);
+
+        // Create and populate name cell
+        const nameCell = document.createElement('td');
+        nameCell.textContent = student.fullName;
+        row.appendChild(nameCell);
+
+        // Create and populate date of birth cell
+        const dobCell = document.createElement('td');
+        dobCell.textContent = student.dateOfBirth;
+        row.appendChild(dobCell);
+
+        // Create and populate class cell
+        const classCell = document.createElement('td');
+        classCell.textContent = student.className;
+        row.appendChild(classCell);
+
+        // Add completed row to table
+        tableBody.appendChild(row);
+      });
+
+      // Ensure popup is visible
+      document.getElementById('studentPopup').classList.add('popup-visible');
+    }
+
+    // Close popup when close button is clicked
+    document.getElementById('closePopup').addEventListener('click', function () {
+      document.getElementById('studentPopup').classList.remove('popup-visible');
+    });
+
+    // Close popup when clicking outside the popup content (on the overlay)
+    document.getElementById('studentPopup').addEventListener('click', function (event) {
+      if (event.target === this) {
+        this.classList.remove('popup-visible');
+      }
+    });
+  </script>
+
+</body>
+
+</html>
