@@ -342,6 +342,10 @@
         showVideoPreview(videoData.uris);
       }
     })
+    eventBridge.receiveDataFromNative('videoCapture',function (videoData) {
+      console.log('Video data received from native:', videoData);
+      showVideoPreview(videoData.uris);
+    });
 
     // Nhận dữ liệu media từ native
     eventBridge.receiveDataFromNative(ACTIONS.MEDIA_CAPTURED, function (mediaData) {
