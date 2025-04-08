@@ -231,9 +231,9 @@
       <button type="button" class="popup-btn" id="captureAudioButton">Capture Audio</button>
     </div>
     <div class="button-group" style="margin-top: 10px;">
-      <button type="button" class="reset-btn" id="selectPhotosButton">Select Photos</button>
-      <button type="button" class="popup-btn" id="selectVideo">Select Video</button>
-      <button type="button" class="submit-btn" id="selectAudioButton">Select Audio</button>
+      <button type="button" class="reset-btn" id="selectPhotosButton">Gallery Photo</button>
+      <button type="button" class="popup-btn" id="selectVideo">Gallery Video</button>
+      <button type="button" class="submit-btn" id="selectAudioButton">Gallery Audio</button>
     </div>
     <div class="media-preview" id="mediaPreview">
       <h3 id="previewTitle"></h3>
@@ -318,6 +318,9 @@
 
       // Send event to native to request student list
       eventBridge.sendToNative(ACTIONS.OPEN_POPUP, true);
+    });
+    document.getElementById('selectAudioButton').addEventListener('click', function () {
+      eventBridge.sendToNative(ACTIONS.SELECT_AUDIO, true);
     });
     
     eventBridge.receiveDataFromNative(ACTIONS.GET_STUDENT_LIST, function (studentData) {
